@@ -1,5 +1,7 @@
 // Parse and validate DDNS update requests from URL path and query params
 
+const DOMAIN = ".gingerlycoding.com";
+
 const ALLOWED_HOSTS: Record<string, string> = {
 	pawnee: "pawnee.gingerlycoding.com",
 	muncie: "muncie.gingerlycoding.com",
@@ -19,7 +21,12 @@ export function parseRequest(request: Request): ParseResult {
 		return { error: "nohost" };
 	}
 
-	const hostname = ALLOWED_HOSTS[segments[1]];
+	let id = segments[1];
+	if (id.endsWith(DOMAIN)) {
+		id = id.slice(0, -DOMAIN.length);
+	}
+
+	const hostname = ALLOWED_HOSTS[id];
 	if (!hostname) {
 		return { error: "nohost" };
 	}

@@ -61,4 +61,24 @@ describe("parseRequest", () => {
 		const result = parseRequest(makeRequest("/host/pawnee/?ip=1.2.3.4"));
 		expect(result).toEqual({ hostname: "pawnee.gingerlycoding.com", ip: "1.2.3.4" });
 	});
+
+	it("accepts full FQDN pawnee.gingerlycoding.com", () => {
+		const result = parseRequest(makeRequest("/host/pawnee.gingerlycoding.com?ip=1.2.3.4"));
+		expect(result).toEqual({ hostname: "pawnee.gingerlycoding.com", ip: "1.2.3.4" });
+	});
+
+	it("accepts full FQDN muncie.gingerlycoding.com", () => {
+		const result = parseRequest(makeRequest("/host/muncie.gingerlycoding.com?ip=10.0.0.1"));
+		expect(result).toEqual({ hostname: "muncie.gingerlycoding.com", ip: "10.0.0.1" });
+	});
+
+	it("returns nohost for allowed subdomain on wrong domain", () => {
+		const result = parseRequest(makeRequest("/host/pawnee.example.com?ip=1.2.3.4"));
+		expect(result).toEqual({ error: "nohost" });
+	});
+
+	it("returns nohost for unknown subdomain on correct domain", () => {
+		const result = parseRequest(makeRequest("/host/bogus.gingerlycoding.com?ip=1.2.3.4"));
+		expect(result).toEqual({ error: "nohost" });
+	});
 });
