@@ -131,6 +131,22 @@ describe("DDNS Worker", () => {
 		expect(await res.text()).toBe("good 4.4.4.4");
 	});
 
+	it('returns "911" when DNS API fails', async () => {
+		fetchMock
+			.get("https://api.cloudflare.com")
+			.intercept({
+				path: `/client/v4/zones/${ZONE_ID}/dns_records?name=${HOSTNAME}&type=A`,
+				method: "GET",
+			})
+			.reply(500, JSON.stringify({ success: false }));
+
+		const res = await SELF.fetch("https://dyndns.gingerlycoding.com/host/pawnee?ip=1.2.3.4", {
+			headers: { Authorization: authHeader() },
+		});
+		expect(res.status).toBe(200);
+		expect(await res.text()).toBe("911");
+	});
+
 	it("works with muncie hostname", async () => {
 		const muncieHost = "muncie.gingerlycoding.com";
 		mockDnsLookup(muncieHost, [{ id: "muncie-record", content: "5.5.5.5" }]);
