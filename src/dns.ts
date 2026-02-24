@@ -23,8 +23,13 @@ export async function updateDnsRecord(
 	};
 
 	// Step 1: Look up existing A record
-	const lookupUrl = `${CF_API}/zones/${env.CF_ZONE_ID}/dns_records?name=${hostname}&type=A`;
+	const lookupUrl = `${CF_API}/zones/${env.CF_ZONE_ID}/dns_records?name=${encodeURIComponent(hostname)}&type=A`;
 	const lookupRes = await fetch(lookupUrl, { headers });
+
+	if (!lookupRes.ok) {
+		return { status: "error", ip, message: `DNS lookup failed: HTTP ${lookupRes.status}` };
+	}
+
 	const lookupData = (await lookupRes.json()) as {
 		success: boolean;
 		result: { id: string; content: string }[];
@@ -48,6 +53,11 @@ export async function updateDnsRecord(
 		headers,
 		body: JSON.stringify({ content: ip, ttl: 60, proxied: false }),
 	});
+
+	if (!patchRes.ok) {
+		return { status: "error", ip, message: `DNS update failed: HTTP ${patchRes.status}` };
+	}
+
 	const patchData = (await patchRes.json()) as { success: boolean };
 
 	if (!patchData.success) {

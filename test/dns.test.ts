@@ -72,6 +72,19 @@ describe("updateDnsRecord", () => {
 		expect(result.status).toBe("error");
 	});
 
+	it('returns "error" when lookup HTTP status is not ok', async () => {
+		fetchMock
+			.get("https://api.cloudflare.com")
+			.intercept({
+				path: `/client/v4/zones/${ZONE_ID}/dns_records?name=${HOSTNAME}&type=A`,
+				method: "GET",
+			})
+			.reply(401, JSON.stringify({ success: false, errors: [{ message: "unauthorized" }] }));
+
+		const result = await updateDnsRecord(makeEnv(), HOSTNAME, "1.2.3.4");
+		expect(result.status).toBe("error");
+	});
+
 	it('returns "error" when lookup API fails', async () => {
 		fetchMock
 			.get("https://api.cloudflare.com")
