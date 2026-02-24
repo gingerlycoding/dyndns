@@ -9,6 +9,7 @@ interface Env {
 	CF_ZONE_ID: string;
 	BASIC_AUTH_USERNAME: string;
 	BASIC_AUTH_PASSWORD: string;
+	ALLOWED_SUBDOMAINS: string;
 }
 
 const ALLOWED_METHODS = new Set(["GET", "POST", "PUT"]);
@@ -23,7 +24,7 @@ export default {
 			return authFailResponse();
 		}
 
-		const parsed = parseRequest(request);
+		const parsed = parseRequest(request, env);
 		if ("error" in parsed) {
 			return clientErrorResponse(parsed.error);
 		}

@@ -12,6 +12,7 @@ export default defineWorkersConfig({
 						BASIC_AUTH_PASSWORD: "testpass",
 						CF_API_TOKEN: "test-api-token",
 						CF_ZONE_ID: "test-zone-id",
+						ALLOWED_SUBDOMAINS: "pawnee,muncie",
 					},
 				},
 			},

@@ -2,18 +2,19 @@
 
 const DOMAIN = ".gingerlycoding.com";
 
-const ALLOWED_HOSTS: Record<string, string> = {
-	pawnee: "pawnee.gingerlycoding.com",
-	muncie: "muncie.gingerlycoding.com",
-};
-
 const IPV4_REGEX = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/;
+
+export interface RoutesEnv {
+	ALLOWED_SUBDOMAINS: string;
+}
 
 type ParseSuccess = { hostname: string; ip: string };
 type ParseError = { error: "nohost" | "badip" };
 export type ParseResult = ParseSuccess | ParseError;
 
-export function parseRequest(request: Request): ParseResult {
+export function parseRequest(request: Request, env: RoutesEnv): ParseResult {
+	const allowed = new Set(env.ALLOWED_SUBDOMAINS.split(",").map((s) => s.trim()));
+
 	const url = new URL(request.url);
 	const segments = url.pathname.replace(/\/+$/, "").split("/").filter(Boolean);
 
@@ -26,8 +27,7 @@ export function parseRequest(request: Request): ParseResult {
 		id = id.slice(0, -DOMAIN.length);
 	}
 
-	const hostname = ALLOWED_HOSTS[id];
-	if (!hostname) {
+	if (!allowed.has(id)) {
 		return { error: "nohost" };
 	}
 
@@ -36,7 +36,7 @@ export function parseRequest(request: Request): ParseResult {
 		return { error: "badip" };
 	}
 
-	return { hostname, ip };
+	return { hostname: `${id}${DOMAIN}`, ip };
 }
 
 function isValidIPv4(ip: string): boolean {
