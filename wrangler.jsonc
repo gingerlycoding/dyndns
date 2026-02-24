@@ -3,6 +3,6 @@
 	"main": "src/index.ts",
 	"compatibility_date": "2026-02-11",
 	"routes": [
-		{ "pattern": "dyndns.gingerlycoding.com/*", "custom_domain": true }
+		{ "pattern": "dyndns.gingerlycoding.com", "custom_domain": true }
 	]
 }
