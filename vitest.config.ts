@@ -6,6 +6,14 @@ export default defineWorkersConfig({
 		poolOptions: {
 			workers: {
 				wrangler: { configPath: "./wrangler.jsonc" },
+				miniflare: {
+					bindings: {
+						BASIC_AUTH_USERNAME: "testuser",
+						BASIC_AUTH_PASSWORD: "testpass",
+						CF_API_TOKEN: "test-api-token",
+						CF_ZONE_ID: "test-zone-id",
+					},
+				},
 			},
 		},
 	},
