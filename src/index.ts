@@ -1,0 +1,34 @@
+// Cloudflare Worker fetch handler for dynamic DNS updates
+import { verifyAuth } from "./auth";
+import { parseRequest } from "./routes";
+import { updateDnsRecord } from "./dns";
+import { dyndns2Response, clientErrorResponse, authFailResponse, methodNotAllowed } from "./response";
+
+interface Env {
+	CF_API_TOKEN: string;
+	CF_ZONE_ID: string;
+	BASIC_AUTH_USERNAME: string;
+	BASIC_AUTH_PASSWORD: string;
+	ALLOWED_SUBDOMAINS: string;
+	DOMAIN: string;
+}
+
+export default {
+	async fetch(request: Request, env: Env): Promise<Response> {
+		if (request.method !== "GET") {
+			return methodNotAllowed();
+		}
+
+		if (!verifyAuth(request, env)) {
+			return authFailResponse();
+		}
+
+		const parsed = parseRequest(request, env);
+		if ("error" in parsed) {
+			return clientErrorResponse(parsed.error);
+		}
+
+		const result = await updateDnsRecord(env, parsed.hostname, parsed.ip);
+		return dyndns2Response(result.status, result.ip);
+	},
+} satisfies ExportedHandler<Env>;
