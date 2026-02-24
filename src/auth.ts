@@ -15,7 +15,7 @@ export interface AuthEnv {
 	BASIC_AUTH_PASSWORD: string;
 }
 
-export async function verifyAuth(request: Request, env: AuthEnv): Promise<boolean> {
+export function verifyAuth(request: Request, env: AuthEnv): boolean {
 	const header = request.headers.get("Authorization");
 	if (!header || !header.startsWith("Basic ")) {
 		return false;

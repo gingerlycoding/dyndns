@@ -1,11 +1,10 @@
 // Parse and validate DDNS update requests from URL path and query params
 
-const DOMAIN = ".gingerlycoding.com";
-
 const IPV4_REGEX = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/;
 
 export interface RoutesEnv {
 	ALLOWED_SUBDOMAINS: string;
+	DOMAIN: string;
 }
 
 type ParseSuccess = { hostname: string; ip: string };
@@ -14,6 +13,7 @@ export type ParseResult = ParseSuccess | ParseError;
 
 export function parseRequest(request: Request, env: RoutesEnv): ParseResult {
 	const allowed = new Set(env.ALLOWED_SUBDOMAINS.split(",").map((s) => s.trim()));
+	const domainSuffix = `.${env.DOMAIN}`;
 
 	const url = new URL(request.url);
 	const segments = url.pathname.replace(/\/+$/, "").split("/").filter(Boolean);
@@ -23,8 +23,8 @@ export function parseRequest(request: Request, env: RoutesEnv): ParseResult {
 	}
 
 	let id = segments[1];
-	if (id.endsWith(DOMAIN)) {
-		id = id.slice(0, -DOMAIN.length);
+	if (id.endsWith(domainSuffix)) {
+		id = id.slice(0, -domainSuffix.length);
 	}
 
 	if (!allowed.has(id)) {
@@ -36,7 +36,7 @@ export function parseRequest(request: Request, env: RoutesEnv): ParseResult {
 		return { error: "badip" };
 	}
 
-	return { hostname: `${id}${DOMAIN}`, ip };
+	return { hostname: `${id}${domainSuffix}`, ip };
 }
 
 function isValidIPv4(ip: string): boolean {

@@ -13,6 +13,7 @@ export default defineWorkersConfig({
 						CF_API_TOKEN: "test-api-token",
 						CF_ZONE_ID: "test-zone-id",
 						ALLOWED_SUBDOMAINS: "pawnee,muncie",
+						DOMAIN: "gingerlycoding.com",
 					},
 				},
 			},

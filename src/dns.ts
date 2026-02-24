@@ -40,7 +40,7 @@ export async function updateDnsRecord(
 	}
 
 	// Step 2: Create or update the record
-	if (lookupData.result.length === 0) {
+	if (!lookupData.result?.length) {
 		return createDnsRecord(env, headers, hostname, ip);
 	}
 

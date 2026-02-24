@@ -19,38 +19,38 @@ function makeRequest(authHeader?: string): Request {
 }
 
 describe("verifyAuth", () => {
-	it("returns true for valid credentials", async () => {
+	it("returns true for valid credentials", () => {
 		const req = makeRequest(basicAuthHeader("testuser", "testpass"));
-		expect(await verifyAuth(req, makeEnv())).toBe(true);
+		expect(verifyAuth(req, makeEnv())).toBe(true);
 	});
 
-	it("returns false when no Authorization header is present", async () => {
+	it("returns false when no Authorization header is present", () => {
 		const req = makeRequest();
-		expect(await verifyAuth(req, makeEnv())).toBe(false);
+		expect(verifyAuth(req, makeEnv())).toBe(false);
 	});
 
-	it("returns false for wrong username", async () => {
+	it("returns false for wrong username", () => {
 		const req = makeRequest(basicAuthHeader("wrong", "testpass"));
-		expect(await verifyAuth(req, makeEnv())).toBe(false);
+		expect(verifyAuth(req, makeEnv())).toBe(false);
 	});
 
-	it("returns false for wrong password", async () => {
+	it("returns false for wrong password", () => {
 		const req = makeRequest(basicAuthHeader("testuser", "wrong"));
-		expect(await verifyAuth(req, makeEnv())).toBe(false);
+		expect(verifyAuth(req, makeEnv())).toBe(false);
 	});
 
-	it("returns false for non-Basic auth scheme", async () => {
+	it("returns false for non-Basic auth scheme", () => {
 		const req = makeRequest("Bearer some-token");
-		expect(await verifyAuth(req, makeEnv())).toBe(false);
+		expect(verifyAuth(req, makeEnv())).toBe(false);
 	});
 
-	it("returns false for malformed base64", async () => {
+	it("returns false for malformed base64", () => {
 		const req = makeRequest("Basic !!!not-base64!!!");
-		expect(await verifyAuth(req, makeEnv())).toBe(false);
+		expect(verifyAuth(req, makeEnv())).toBe(false);
 	});
 
-	it("returns false for base64 without colon separator", async () => {
+	it("returns false for base64 without colon separator", () => {
 		const req = makeRequest("Basic " + btoa("nocolon"));
-		expect(await verifyAuth(req, makeEnv())).toBe(false);
+		expect(verifyAuth(req, makeEnv())).toBe(false);
 	});
 });

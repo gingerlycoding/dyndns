@@ -10,6 +10,7 @@ interface Env {
 	BASIC_AUTH_USERNAME: string;
 	BASIC_AUTH_PASSWORD: string;
 	ALLOWED_SUBDOMAINS: string;
+	DOMAIN: string;
 }
 
 const ALLOWED_METHODS = new Set(["GET", "POST", "PUT"]);
@@ -20,7 +21,7 @@ export default {
 			return methodNotAllowed();
 		}
 
-		if (!(await verifyAuth(request, env))) {
+		if (!verifyAuth(request, env)) {
 			return authFailResponse();
 		}
 
