@@ -4,10 +4,10 @@ A Cloudflare Worker that updates DNS A records for gingerlycoding.com subdomains
 
 ## Supported hostnames
 
+Configured via the `ALLOWED_SUBDOMAINS` environment variable (comma-separated). Currently:
+
 - `pawnee.gingerlycoding.com`
 - `muncie.gingerlycoding.com`
-
-No other subdomains are allowed.
 
 ## API
 
@@ -59,6 +59,7 @@ Set via `wrangler secret put <NAME>`:
 | `CF_ZONE_ID` | Zone ID for gingerlycoding.com |
 | `BASIC_AUTH_USERNAME` | Basic auth username |
 | `BASIC_AUTH_PASSWORD` | Basic auth password |
+| `ALLOWED_SUBDOMAINS` | Comma-separated list of allowed subdomains (e.g. `pawnee,muncie`) |
 
 ## Unifi gateway configuration
 
@@ -69,3 +70,22 @@ Configure a custom DDNS provider on each gateway:
 - **Server**: `dyndns.gingerlycoding.com/host/%h?ip=%i`
 - **Username**: value of `BASIC_AUTH_USERNAME`
 - **Password**: value of `BASIC_AUTH_PASSWORD`
+
+## Debugging
+
+Stream live logs from the deployed worker:
+```bash
+npx wrangler tail
+```
+
+Test the live endpoint:
+```bash
+curl -u user:pass "https://dyndns.gingerlycoding.com/host/pawnee?ip=1.2.3.4"
+```
+
+Common responses to check for:
+- `good <ip>` — working correctly, DNS updated
+- `nochg <ip>` — working correctly, IP already current
+- `badauth` — check `BASIC_AUTH_USERNAME` / `BASIC_AUTH_PASSWORD` secrets
+- `nohost` — the subdomain isn't in `ALLOWED_SUBDOMAINS`, or the path format is wrong
+- `911` — check `CF_API_TOKEN` permissions and `CF_ZONE_ID` value via `npx wrangler tail`
