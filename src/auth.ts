@@ -1,5 +1,15 @@
 // Verify HTTP Basic Auth credentials against environment secrets
 
+function constantTimeEqual(a: Uint8Array, b: Uint8Array): boolean {
+	const maxLen = Math.max(a.byteLength, b.byteLength);
+	const paddedA = new Uint8Array(maxLen);
+	const paddedB = new Uint8Array(maxLen);
+	paddedA.set(a);
+	paddedB.set(b);
+	const equal = crypto.subtle.timingSafeEqual(paddedA, paddedB);
+	return equal && a.byteLength === b.byteLength;
+}
+
 export interface AuthEnv {
 	BASIC_AUTH_USERNAME: string;
 	BASIC_AUTH_PASSWORD: string;
@@ -27,18 +37,8 @@ export async function verifyAuth(request: Request, env: AuthEnv): Promise<boolea
 	const password = decoded.slice(colonIndex + 1);
 
 	const encoder = new TextEncoder();
-	const expectedUser = encoder.encode(env.BASIC_AUTH_USERNAME);
-	const actualUser = encoder.encode(username);
-	const expectedPass = encoder.encode(env.BASIC_AUTH_PASSWORD);
-	const actualPass = encoder.encode(password);
-
-	if (expectedUser.byteLength !== actualUser.byteLength ||
-		expectedPass.byteLength !== actualPass.byteLength) {
-		return false;
-	}
-
-	const userMatch = crypto.subtle.timingSafeEqual(expectedUser, actualUser);
-	const passMatch = crypto.subtle.timingSafeEqual(expectedPass, actualPass);
+	const userMatch = constantTimeEqual(encoder.encode(env.BASIC_AUTH_USERNAME), encoder.encode(username));
+	const passMatch = constantTimeEqual(encoder.encode(env.BASIC_AUTH_PASSWORD), encoder.encode(password));
 
 	return userMatch && passMatch;
 }
