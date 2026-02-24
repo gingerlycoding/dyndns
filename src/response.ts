@@ -9,6 +9,10 @@ export function dyndns2Response(status: DnsStatus, ip: string): Response {
 	return new Response(body, { headers: TEXT_PLAIN });
 }
 
+export function clientErrorResponse(code: "nohost" | "badip"): Response {
+	return new Response(code, { headers: TEXT_PLAIN });
+}
+
 export function authFailResponse(): Response {
 	return new Response("badauth", {
 		status: 401,

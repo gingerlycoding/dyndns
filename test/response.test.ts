@@ -1,6 +1,6 @@
 // Tests for dyndns2 response formatting helpers
 import { describe, it, expect } from "vitest";
-import { dyndns2Response, authFailResponse, methodNotAllowed } from "../src/response";
+import { dyndns2Response, clientErrorResponse, authFailResponse, methodNotAllowed } from "../src/response";
 
 describe("dyndns2Response", () => {
 	it('returns "good <ip>" for status good', async () => {
@@ -23,6 +23,25 @@ describe("dyndns2Response", () => {
 
 	it("sets content-type to text/plain", () => {
 		const res = dyndns2Response("good", "1.2.3.4");
+		expect(res.headers.get("Content-Type")).toBe("text/plain");
+	});
+});
+
+describe("clientErrorResponse", () => {
+	it('returns "nohost" body with 200 status', async () => {
+		const res = clientErrorResponse("nohost");
+		expect(res.status).toBe(200);
+		expect(await res.text()).toBe("nohost");
+	});
+
+	it('returns "badip" body with 200 status', async () => {
+		const res = clientErrorResponse("badip");
+		expect(res.status).toBe(200);
+		expect(await res.text()).toBe("badip");
+	});
+
+	it("sets content-type to text/plain", () => {
+		const res = clientErrorResponse("nohost");
 		expect(res.headers.get("Content-Type")).toBe("text/plain");
 	});
 });

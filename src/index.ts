@@ -2,7 +2,7 @@
 import { verifyAuth } from "./auth";
 import { parseRequest } from "./routes";
 import { updateDnsRecord } from "./dns";
-import { dyndns2Response, authFailResponse, methodNotAllowed } from "./response";
+import { dyndns2Response, clientErrorResponse, authFailResponse, methodNotAllowed } from "./response";
 
 interface Env {
 	CF_API_TOKEN: string;
@@ -25,7 +25,7 @@ export default {
 
 		const parsed = parseRequest(request);
 		if ("error" in parsed) {
-			return new Response(parsed.error, { headers: { "Content-Type": "text/plain" } });
+			return clientErrorResponse(parsed.error);
 		}
 
 		const result = await updateDnsRecord(env, parsed.hostname, parsed.ip);
