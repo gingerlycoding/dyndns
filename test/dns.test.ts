@@ -32,6 +32,16 @@ function mockPatch(status: number, success: boolean) {
 		.reply(status, JSON.stringify({ success }));
 }
 
+function mockCreate(status: number, success: boolean) {
+	fetchMock
+		.get("https://api.cloudflare.com")
+		.intercept({
+			path: `/client/v4/zones/${ZONE_ID}/dns_records`,
+			method: "POST",
+		})
+		.reply(status, JSON.stringify({ success }));
+}
+
 beforeAll(() => {
 	fetchMock.activate();
 	fetchMock.disableNetConnect();
@@ -57,8 +67,17 @@ describe("updateDnsRecord", () => {
 		expect(result).toEqual({ status: "nochg", ip: "1.2.3.4" });
 	});
 
-	it('returns "error" when no DNS record exists', async () => {
+	it('returns "good" and creates record when none exists', async () => {
 		mockLookup([]);
+		mockCreate(200, true);
+
+		const result = await updateDnsRecord(makeEnv(), HOSTNAME, "1.2.3.4");
+		expect(result).toEqual({ status: "good", ip: "1.2.3.4" });
+	});
+
+	it('returns "error" when create fails', async () => {
+		mockLookup([]);
+		mockCreate(500, false);
 
 		const result = await updateDnsRecord(makeEnv(), HOSTNAME, "1.2.3.4");
 		expect(result.status).toBe("error");
