@@ -13,11 +13,9 @@ interface Env {
 	DOMAIN: string;
 }
 
-const ALLOWED_METHODS = new Set(["GET", "POST", "PUT"]);
-
 export default {
 	async fetch(request: Request, env: Env): Promise<Response> {
-		if (!ALLOWED_METHODS.has(request.method)) {
+		if (request.method !== "GET") {
 			return methodNotAllowed();
 		}
 

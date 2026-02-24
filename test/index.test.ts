@@ -107,28 +107,20 @@ describe("DDNS Worker", () => {
 		expect(await res.text()).toBe("nochg 1.2.3.4");
 	});
 
-	it("works with POST method", async () => {
-		mockDnsLookup(HOSTNAME, [{ id: RECORD_ID, content: "1.1.1.1" }]);
-		mockDnsPatch(RECORD_ID);
-
+	it("returns 405 for POST method", async () => {
 		const res = await SELF.fetch("https://dyndns.gingerlycoding.com/host/pawnee?ip=3.3.3.3", {
 			method: "POST",
 			headers: { Authorization: authHeader() },
 		});
-		expect(res.status).toBe(200);
-		expect(await res.text()).toBe("good 3.3.3.3");
+		expect(res.status).toBe(405);
 	});
 
-	it("works with PUT method", async () => {
-		mockDnsLookup(HOSTNAME, [{ id: RECORD_ID, content: "1.1.1.1" }]);
-		mockDnsPatch(RECORD_ID);
-
+	it("returns 405 for PUT method", async () => {
 		const res = await SELF.fetch("https://dyndns.gingerlycoding.com/host/pawnee?ip=4.4.4.4", {
 			method: "PUT",
 			headers: { Authorization: authHeader() },
 		});
-		expect(res.status).toBe(200);
-		expect(await res.text()).toBe("good 4.4.4.4");
+		expect(res.status).toBe(405);
 	});
 
 	it('returns "911" when DNS API fails', async () => {
