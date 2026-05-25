@@ -12,12 +12,14 @@ Configured via the `ALLOWED_SUBDOMAINS` environment variable (comma-separated). 
 ## API
 
 ```
-GET|POST|PUT https://dyndns.gingerlycoding.com/host/:id?ip=:ip
+GET https://dyndns.gingerlycoding.com/host/:id?ip=:ip
 ```
 
-Where `:id` is `pawnee` or `muncie` and `:ip` is a valid IPv4 address.
+Where `:id` is `pawnee` or `muncie` (with or without the `.gingerlycoding.com` suffix) and `:ip` is a valid IPv4 address. Non-GET methods return 405; unknown paths return 404 with no auth challenge so probes and scanners can't distinguish this endpoint from any other 404.
 
-Authentication: HTTP Basic Auth.
+Authentication: HTTP Basic Auth, compared in constant time against `BASIC_AUTH_USERNAME` / `BASIC_AUTH_PASSWORD`.
+
+If no A record exists for the hostname, one is created. If more than one A record exists, the worker refuses to update and returns `911` — that indicates manual records were added out of band and need to be reconciled by hand.
 
 ### Response codes (dyndns2 protocol)
 
@@ -60,6 +62,7 @@ Set via `wrangler secret put <NAME>`:
 | `BASIC_AUTH_USERNAME` | Basic auth username |
 | `BASIC_AUTH_PASSWORD` | Basic auth password |
 | `ALLOWED_SUBDOMAINS` | Comma-separated list of allowed subdomains (e.g. `pawnee,muncie`) |
+| `DOMAIN` | Apex domain (e.g. `gingerlycoding.com`) — stripped from request paths and appended to subdomain lookups |
 
 ## Unifi gateway configuration
 
