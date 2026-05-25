@@ -1,6 +1,6 @@
 // Tests for request parsing and route validation
 import { describe, it, expect } from "vitest";
-import { parseRequest, type RoutesEnv } from "../src/routes";
+import { parseRequest, isHostPath, type RoutesEnv } from "../src/routes";
 
 const env: RoutesEnv = { ALLOWED_SUBDOMAINS: "pawnee,muncie", DOMAIN: "gingerlycoding.com" };
 
@@ -100,5 +100,46 @@ describe("parseRequest", () => {
 		const emptyEnv: RoutesEnv = { ALLOWED_SUBDOMAINS: "", DOMAIN: "gingerlycoding.com" };
 		const result = parseRequest(makeRequest("/host/pawnee?ip=1.2.3.4"), emptyEnv);
 		expect(result).toEqual({ error: "nohost" });
+	});
+
+	it("does not implicitly allow empty subdomain from blank CSV entries", () => {
+		const sloppyEnv: RoutesEnv = { ALLOWED_SUBDOMAINS: ",,pawnee,", DOMAIN: "gingerlycoding.com" };
+		// Bare-suffix path would strip to empty id; must not match.
+		const result = parseRequest(makeRequest("/host/.gingerlycoding.com?ip=1.2.3.4"), sloppyEnv);
+		expect(result).toEqual({ error: "nohost" });
+	});
+});
+
+describe("isHostPath", () => {
+	it("accepts /host/<id>", () => {
+		expect(isHostPath("/host/pawnee")).toBe(true);
+	});
+
+	it("accepts /host/<id> with trailing slash", () => {
+		expect(isHostPath("/host/pawnee/")).toBe(true);
+	});
+
+	it("rejects /", () => {
+		expect(isHostPath("/")).toBe(false);
+	});
+
+	it("rejects empty pathname", () => {
+		expect(isHostPath("")).toBe(false);
+	});
+
+	it("rejects /host with no id", () => {
+		expect(isHostPath("/host")).toBe(false);
+	});
+
+	it("rejects /host/ with no id", () => {
+		expect(isHostPath("/host/")).toBe(false);
+	});
+
+	it("rejects /foo/bar", () => {
+		expect(isHostPath("/foo/bar")).toBe(false);
+	});
+
+	it("rejects /host/x/y (too many segments)", () => {
+		expect(isHostPath("/host/x/y")).toBe(false);
 	});
 });

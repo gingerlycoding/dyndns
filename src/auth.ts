@@ -1,5 +1,8 @@
 // Verify HTTP Basic Auth credentials against environment secrets
 
+// crypto.subtle.timingSafeEqual is a Workers-specific extension that returns a
+// boolean synchronously (unlike the rest of WebCrypto). It requires equal-length
+// inputs, so we pad to the longer length and check the real lengths after.
 function constantTimeEqual(a: Uint8Array, b: Uint8Array): boolean {
 	const maxLen = Math.max(a.byteLength, b.byteLength);
 	const paddedA = new Uint8Array(maxLen);
@@ -17,7 +20,8 @@ export interface AuthEnv {
 
 export function verifyAuth(request: Request, env: AuthEnv): boolean {
 	const header = request.headers.get("Authorization");
-	if (!header || !header.startsWith("Basic ")) {
+	// RFC 7235 §2.1: the auth scheme name is case-insensitive.
+	if (!header || header.slice(0, 6).toLowerCase() !== "basic ") {
 		return false;
 	}
 

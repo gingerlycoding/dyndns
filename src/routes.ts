@@ -7,12 +7,23 @@ export interface RoutesEnv {
 	DOMAIN: string;
 }
 
+// Cheap shape check used before auth so unrelated traffic 404s without
+// revealing that this endpoint is authenticated.
+export function isHostPath(pathname: string): boolean {
+	const segments = pathname.replace(/\/+$/, "").split("/").filter(Boolean);
+	return segments.length === 2 && segments[0] === "host";
+}
+
 type ParseSuccess = { hostname: string; ip: string };
 type ParseError = { error: "nohost" | "badip" };
 export type ParseResult = ParseSuccess | ParseError;
 
 export function parseRequest(request: Request, env: RoutesEnv): ParseResult {
-	const allowed = new Set(env.ALLOWED_SUBDOMAINS.split(",").map((s) => s.trim()));
+	const allowed = new Set(
+		env.ALLOWED_SUBDOMAINS.split(",")
+			.map((s) => s.trim())
+			.filter((s) => s.length > 0),
+	);
 	const domainSuffix = `.${env.DOMAIN}`;
 
 	const url = new URL(request.url);
@@ -28,6 +39,7 @@ export function parseRequest(request: Request, env: RoutesEnv): ParseResult {
 	}
 
 	if (!allowed.has(id)) {
+		console.warn(`Rejected unknown subdomain: ${id}.${env.DOMAIN}`);
 		return { error: "nohost" };
 	}
 
