@@ -1,6 +1,6 @@
 // Tests for dyndns2 response formatting helpers
 import { describe, it, expect } from "vitest";
-import { dyndns2Response, clientErrorResponse, authFailResponse, methodNotAllowed } from "../src/response";
+import { dyndns2Response, clientErrorResponse, authFailResponse, methodNotAllowed, notFound } from "../src/response";
 
 describe("dyndns2Response", () => {
 	it('returns "good <ip>" for status good', async () => {
@@ -63,5 +63,14 @@ describe("methodNotAllowed", () => {
 	it("returns 405", async () => {
 		const res = methodNotAllowed();
 		expect(res.status).toBe(405);
+	});
+});
+
+describe("notFound", () => {
+	it("returns 404 with no body and no auth challenge", async () => {
+		const res = notFound();
+		expect(res.status).toBe(404);
+		expect(await res.text()).toBe("");
+		expect(res.headers.get("WWW-Authenticate")).toBeNull();
 	});
 });

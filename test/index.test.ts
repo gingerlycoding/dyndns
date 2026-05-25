@@ -70,12 +70,22 @@ describe("DDNS Worker", () => {
 		expect(await res.text()).toBe("nohost");
 	});
 
-	it("returns nohost for bad path", async () => {
+	it("returns 404 for non-host paths without checking auth", async () => {
+		const res = await SELF.fetch("https://dyndns.gingerlycoding.com/");
+		expect(res.status).toBe(404);
+		expect(res.headers.get("WWW-Authenticate")).toBeNull();
+	});
+
+	it("returns 404 for non-host paths even with valid auth", async () => {
 		const res = await SELF.fetch("https://dyndns.gingerlycoding.com/foo/bar", {
 			headers: { Authorization: authHeader() },
 		});
-		expect(res.status).toBe(200);
-		expect(await res.text()).toBe("nohost");
+		expect(res.status).toBe(404);
+	});
+
+	it("returns 404 for /host root", async () => {
+		const res = await SELF.fetch("https://dyndns.gingerlycoding.com/host");
+		expect(res.status).toBe(404);
 	});
 
 	it("returns error for missing ip parameter", async () => {

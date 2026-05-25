@@ -1,8 +1,14 @@
 // Cloudflare Worker fetch handler for dynamic DNS updates
 import { verifyAuth } from "./auth";
-import { parseRequest } from "./routes";
+import { isHostPath, parseRequest } from "./routes";
 import { updateDnsRecord } from "./dns";
-import { dyndns2Response, clientErrorResponse, authFailResponse, methodNotAllowed } from "./response";
+import {
+	dyndns2Response,
+	clientErrorResponse,
+	authFailResponse,
+	methodNotAllowed,
+	notFound,
+} from "./response";
 
 interface Env {
 	CF_API_TOKEN: string;
@@ -19,6 +25,13 @@ export default {
 			return methodNotAllowed();
 		}
 
+		// Path shape check runs before auth so unrelated traffic (probes,
+		// scanners, /) sees a flat 404 with no auth challenge.
+		const url = new URL(request.url);
+		if (!isHostPath(url.pathname)) {
+			return notFound();
+		}
+
 		if (!verifyAuth(request, env)) {
 			return authFailResponse();
 		}
@@ -29,6 +42,9 @@ export default {
 		}
 
 		const result = await updateDnsRecord(env, parsed.hostname, parsed.ip);
+		if (result.status === "error") {
+			console.error(`DNS error for ${parsed.hostname} (${parsed.ip}): ${result.message}`);
+		}
 		return dyndns2Response(result.status, result.ip);
 	},
 } satisfies ExportedHandler<Env>;

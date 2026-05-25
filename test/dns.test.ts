@@ -67,6 +67,50 @@ describe("updateDnsRecord", () => {
 		expect(result).toEqual({ status: "nochg", ip: "1.2.3.4" });
 	});
 
+	it("sends ttl=1 and a UniFi comment when creating", async () => {
+		mockLookup([]);
+		let captured = "";
+		fetchMock
+			.get("https://api.cloudflare.com")
+			.intercept({
+				path: `/client/v4/zones/${ZONE_ID}/dns_records`,
+				method: "POST",
+				body: (body) => {
+					captured = body;
+					return true;
+				},
+			})
+			.reply(200, JSON.stringify({ success: true }));
+
+		await updateDnsRecord(makeEnv(), HOSTNAME, "1.2.3.4");
+
+		const parsed = JSON.parse(captured);
+		expect(parsed.ttl).toBe(1);
+		expect(parsed.comment).toMatch(/Dynamically set for UniFi gateway at \d{4}-\d{2}-\d{2}T/);
+	});
+
+	it("sends ttl=1 and a UniFi comment when patching", async () => {
+		mockLookup([{ id: RECORD_ID, content: "1.1.1.1" }]);
+		let captured = "";
+		fetchMock
+			.get("https://api.cloudflare.com")
+			.intercept({
+				path: `/client/v4/zones/${ZONE_ID}/dns_records/${RECORD_ID}`,
+				method: "PATCH",
+				body: (body) => {
+					captured = body;
+					return true;
+				},
+			})
+			.reply(200, JSON.stringify({ success: true }));
+
+		await updateDnsRecord(makeEnv(), HOSTNAME, "2.2.2.2");
+
+		const parsed = JSON.parse(captured);
+		expect(parsed.ttl).toBe(1);
+		expect(parsed.comment).toMatch(/Dynamically set for UniFi gateway at \d{4}-\d{2}-\d{2}T/);
+	});
+
 	it('returns "good" and creates record when none exists', async () => {
 		mockLookup([]);
 		mockCreate(200, true);
@@ -88,6 +132,16 @@ describe("updateDnsRecord", () => {
 		mockPatch(500, false);
 
 		const result = await updateDnsRecord(makeEnv(), HOSTNAME, "2.2.2.2");
+		expect(result.status).toBe("error");
+	});
+
+	it('returns "error" when multiple A records exist for the hostname', async () => {
+		mockLookup([
+			{ id: RECORD_ID, content: "1.1.1.1" },
+			{ id: "record-xyz-456", content: "2.2.2.2" },
+		]);
+
+		const result = await updateDnsRecord(makeEnv(), HOSTNAME, "3.3.3.3");
 		expect(result.status).toBe("error");
 	});
 
